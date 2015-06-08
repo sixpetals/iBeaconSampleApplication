@@ -1,5 +1,6 @@
 package org.sixpetals.ibeacon_app.activities;
 
+import android.os.AsyncTask;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v4.app.Fragment;
 import android.os.RemoteException;
@@ -11,6 +12,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import org.altbeacon.beacon.BeaconConsumer;
 import org.altbeacon.beacon.BeaconManager;
@@ -23,6 +25,7 @@ import org.sixpetals.ibeacon_app.R;
 public class MainActivity extends ActionBarActivity implements BeaconConsumer {
     private BeaconManager beaconManager;
     private BeaconParser beaconParser;
+    private PlaceholderFragment fragment;
 
     // iBeaconのデータを認識するためのParserフォーマット
     public static final String IBEACON_FORMAT = "m:2-3=0215,i:4-19,i:20-21,i:22-23,p:24-24";
@@ -31,10 +34,12 @@ public class MainActivity extends ActionBarActivity implements BeaconConsumer {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        fragment = new  PlaceholderFragment();
+
         setContentView(R.layout.activity_main);
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()
-                    .add(R.id.container, new PlaceholderFragment())
+                    .add(R.id.container, fragment)
                     .commit();
         }
 
@@ -56,12 +61,15 @@ public class MainActivity extends ActionBarActivity implements BeaconConsumer {
             public void didEnterRegion(Region region) {
                 // 領域への入場を検知
                 Log.d("Beacon", "ENTER Region.");
+
+               new BeaconAsyncTask().execute("ビーコン発見" + region.getUniqueId());
             }
 
             @Override
             public void didExitRegion(Region region) {
                 // 領域からの退場を検知
                 Log.d("Beacon", "EXIT Region. ");
+                new BeaconAsyncTask().execute("ビーコン喪失");
             }
 
             @Override
@@ -126,6 +134,20 @@ public class MainActivity extends ActionBarActivity implements BeaconConsumer {
                                  Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.fragment_main, container, false);
             return rootView;
+        }
+    }
+
+    public class BeaconAsyncTask extends AsyncTask<String, Object, String> {
+
+        @Override
+        protected String doInBackground(String... params) {
+            return params[0];
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            TextView tv =  (TextView)findViewById(R.id.mainMessageTextView);
+            tv.setText(result);
         }
     }
 }
