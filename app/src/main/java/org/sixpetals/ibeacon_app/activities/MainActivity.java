@@ -1,5 +1,8 @@
 package org.sixpetals.ibeacon_app.activities;
 
+import android.content.Intent;
+import android.content.res.AssetManager;
+import android.opengl.Visibility;
 import android.os.AsyncTask;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v4.app.Fragment;
@@ -12,20 +15,32 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 
 import org.altbeacon.beacon.BeaconConsumer;
 import org.altbeacon.beacon.BeaconManager;
 import org.altbeacon.beacon.BeaconParser;
+import org.altbeacon.beacon.Identifier;
 import org.altbeacon.beacon.MonitorNotifier;
 import org.altbeacon.beacon.Region;
 import org.sixpetals.ibeacon_app.R;
+import org.sixpetals.ibeacon_app.model.BeaconResponse;
+import org.sixpetals.ibeacon_app.model.BeaconResponseSet;
+
+import java.io.IOException;
+import java.io.InputStream;
 
 
 public class MainActivity extends ActionBarActivity implements BeaconConsumer {
     private BeaconManager beaconManager;
     private BeaconParser beaconParser;
-    private PlaceholderFragment fragment;
+    private MainActivityFragment fragment;
+
+
+    private int OUTRANGE = 0;
+    private int INRANGE = 1;
+
 
     // iBeaconのデータを認識するためのParserフォーマット
     public static final String IBEACON_FORMAT = "m:2-3=0215,i:4-19,i:20-21,i:22-23,p:24-24";
@@ -34,7 +49,7 @@ public class MainActivity extends ActionBarActivity implements BeaconConsumer {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        fragment = new  PlaceholderFragment();
+        fragment = new MainActivityFragment();
 
         setContentView(R.layout.activity_main);
         if (savedInstanceState == null) {
@@ -54,6 +69,7 @@ public class MainActivity extends ActionBarActivity implements BeaconConsumer {
         beaconManager.getBeaconParsers().add(beaconParser);
 
     }
+
     @Override
     public void onBeaconServiceConnect() {
         beaconManager.setMonitorNotifier(new MonitorNotifier() {
@@ -61,15 +77,20 @@ public class MainActivity extends ActionBarActivity implements BeaconConsumer {
             public void didEnterRegion(Region region) {
                 // 領域への入場を検知
                 Log.d("Beacon", "ENTER Region.");
-
-               new BeaconAsyncTask().execute("ビーコン発見" + region.getUniqueId());
+                BeaconRangeInfo info = new BeaconRangeInfo();
+                info.region = region;
+                info.rangeStatus = INRANGE;
+                new BeaconAsyncTask().execute(info);
             }
 
             @Override
             public void didExitRegion(Region region) {
                 // 領域からの退場を検知
                 Log.d("Beacon", "EXIT Region. ");
-                new BeaconAsyncTask().execute("ビーコン喪失");
+                BeaconRangeInfo info = new BeaconRangeInfo();
+                info.region = region;
+                info.rangeStatus = OUTRANGE;
+                new BeaconAsyncTask().execute(info);
             }
 
             @Override
@@ -81,8 +102,17 @@ public class MainActivity extends ActionBarActivity implements BeaconConsumer {
 
         try {
             // ビーコン情報の監視を開始
-            beaconManager.startMonitoringBeaconsInRegion(new Region("unique-id-001", null, null, null));
+
+            AssetManager as = getResources().getAssets();
+            InputStream is = as.open("beacon-response.json");
+            BeaconResponseSet set = new BeaconResponseSet();
+            set.init(is);
+            BeaconResponse res = set.findById(1);
+
+            beaconManager.startMonitoringBeaconsInRegion(new Region(res.name, res.getBeaconId(), null, null));
         } catch (RemoteException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
@@ -121,33 +151,41 @@ public class MainActivity extends ActionBarActivity implements BeaconConsumer {
         return super.onOptionsItemSelected(item);
     }
 
-    /**
-     * A placeholder fragment containing a simple view.
-     */
-    public static class PlaceholderFragment extends Fragment {
-
-        public PlaceholderFragment() {
-        }
-
-        @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                                 Bundle savedInstanceState) {
-            View rootView = inflater.inflate(R.layout.fragment_main, container, false);
-            return rootView;
-        }
+    public void showInfomation() {
+        Intent intent = new Intent(this, QuestionActivity.class);
+        startActivity(intent);
     }
 
-    public class BeaconAsyncTask extends AsyncTask<String, Object, String> {
+
+
+    public class BeaconAsyncTask extends AsyncTask<BeaconRangeInfo, Object, BeaconRangeInfo> {
 
         @Override
-        protected String doInBackground(String... params) {
+        protected BeaconRangeInfo doInBackground(BeaconRangeInfo... params) {
             return params[0];
         }
 
         @Override
-        protected void onPostExecute(String result) {
+        protected void onPostExecute(BeaconRangeInfo result) {
             TextView tv =  (TextView)findViewById(R.id.mainMessageTextView);
-            tv.setText(result);
+            Button btn = (Button)findViewById(R.id.viewInfomaitonButton);
+            if(result.rangeStatus == INRANGE) {
+                tv.setText("ビーコン"+ result.region.getUniqueId()+"を検出しました。");
+                btn.setVisibility(View.VISIBLE);
+            }else{
+                tv.setText("ビーコン"+ result.region.getUniqueId()+"はレンジ外になりました。");
+                btn.setVisibility(View.INVISIBLE);
+            }
         }
+
+
+
+    }
+
+
+    public class BeaconRangeInfo {
+        Region region;
+        int rangeStatus;
+
     }
 }
