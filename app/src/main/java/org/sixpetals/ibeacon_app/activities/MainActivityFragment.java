@@ -10,6 +10,7 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 
 import org.sixpetals.ibeacon_app.R;
+import org.sixpetals.ibeacon_app.model.BeaconResponse;
 
 public class MainActivityFragment extends Fragment{
 
@@ -26,15 +27,18 @@ public class MainActivityFragment extends Fragment{
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
-        Button btnMove = (Button) rootView.findViewById(R.id.viewInfomaitonButton);
+        final Button btnMove = (Button) rootView.findViewById(R.id.viewInfomaitonButton);
         btnMove.setOnClickListener(new OnClickListener() {
 
             @Override
             public void onClick(View v) {
-                parent.showInfomation();
+                BeaconResponse res = (BeaconResponse) btnMove.getTag();
+                parent.showInfomation(res);
             }
         });
 
         return rootView;
     }
+
+
 }

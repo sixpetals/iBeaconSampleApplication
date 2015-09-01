@@ -4,19 +4,22 @@
     "id": 1,
     "name" : "アプレックスUSBビーコン" ,
     "beaconId":"12345678-2df2-1001-b123-456c4d2577e0",
-    "text":"ビーコン１のレスポンスです"
+    "text":"Q1 次の問題に答えよ。",
+    "imageFileName":"Q1.jpg"
   },
   {
-    "id": 1,
-    "name" : "アプレックスUSBビーコン" ,
-    "beaconId":"12345678-2df2-1001-b123-456c4d2577e0",
-    "text":"ビーコン２のレスポンスです"
+    "id": 2,
+    "name" : "黒箱ビーコン１" ,
+    "beaconId":"fcf2b8be-2df2-1801-86e8-001c4dffa480",
+    "text":"Q2 次の問題に答えよ。",
+    "imageFileName":"Q2.jpg"
   },
   {
-    "id": 1,
-    "name" : "アプレックスUSBビーコン" ,
-    "beaconId":"12345678-2df2-1001-b123-456c4d2577e0",
-    "text":"ビーコン３のレスポンスです"
+    "id": 3,
+    "name" : "黒箱ビーコン２" ,
+    "beaconId":"b02aca04-2df2-1801-a8ea-001c4d59080f",
+    "text":"Q3 次の問題に答えよ。",
+    "imageFileName":"Q3.jpg"
   }
 ]
 }

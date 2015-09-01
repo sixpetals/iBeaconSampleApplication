@@ -5,6 +5,9 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import org.altbeacon.beacon.Identifier;
+import org.altbeacon.beacon.Region;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -52,4 +55,15 @@ public class BeaconResponseSet
     {
         return responses.get(id);
     }
+    public BeaconResponse findByBeaconId(Identifier uniqueId){
+
+        for( BeaconResponse res : responses){
+            if (res.getBeaconId().equals(uniqueId)){
+                return res;
+            }
+        }
+        return null;
+    }
+
+
 }

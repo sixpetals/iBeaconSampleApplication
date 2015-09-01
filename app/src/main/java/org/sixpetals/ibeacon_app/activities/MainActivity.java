@@ -41,6 +41,7 @@ public class MainActivity extends ActionBarActivity implements BeaconConsumer {
     private int OUTRANGE = 0;
     private int INRANGE = 1;
 
+    public static BeaconResponseSet BeaconSet;
 
     // iBeaconのデータを認識するためのParserフォーマット
     public static final String IBEACON_FORMAT = "m:2-3=0215,i:4-19,i:20-21,i:22-23,p:24-24";
@@ -101,15 +102,20 @@ public class MainActivity extends ActionBarActivity implements BeaconConsumer {
         });
 
         try {
+            //ビーコンマスタを読込
+            if(BeaconSet == null) {
+                AssetManager as = getResources().getAssets();
+                InputStream is = as.open("beacon-response.json");
+                BeaconResponseSet set = new BeaconResponseSet();
+                set.init(is);
+                BeaconSet = set;
+            }
+
             // ビーコン情報の監視を開始
+            for( BeaconResponse res : BeaconSet.findAll()){
+                beaconManager.startMonitoringBeaconsInRegion(new Region(res.name, res.getBeaconId(), null, null));
+            }
 
-            AssetManager as = getResources().getAssets();
-            InputStream is = as.open("beacon-response.json");
-            BeaconResponseSet set = new BeaconResponseSet();
-            set.init(is);
-            BeaconResponse res = set.findById(1);
-
-            beaconManager.startMonitoringBeaconsInRegion(new Region(res.name, res.getBeaconId(), null, null));
         } catch (RemoteException e) {
             e.printStackTrace();
         } catch (IOException e) {
@@ -151,8 +157,9 @@ public class MainActivity extends ActionBarActivity implements BeaconConsumer {
         return super.onOptionsItemSelected(item);
     }
 
-    public void showInfomation() {
+    public void showInfomation(BeaconResponse res) {
         Intent intent = new Intent(this, QuestionActivity.class);
+        intent.putExtra("Info", res);
         startActivity(intent);
     }
 
@@ -170,10 +177,15 @@ public class MainActivity extends ActionBarActivity implements BeaconConsumer {
             TextView tv =  (TextView)findViewById(R.id.mainMessageTextView);
             Button btn = (Button)findViewById(R.id.viewInfomaitonButton);
             if(result.rangeStatus == INRANGE) {
-                tv.setText("ビーコン"+ result.region.getUniqueId()+"を検出しました。");
+                BeaconResponse res  = BeaconSet.findByBeaconId(result.region.getId1());
+                if (res == null) return;
+                tv.setText("ビーコン「" + result.region.getUniqueId()+"」を検出しました。");
+
+                btn.setTag(res);
                 btn.setVisibility(View.VISIBLE);
             }else{
-                tv.setText("ビーコン"+ result.region.getUniqueId()+"はレンジ外になりました。");
+                tv.setText("ビーコン「"+ result.region.getUniqueId()+"」はレンジ外になりました。");
+                btn.setTag(null);
                 btn.setVisibility(View.INVISIBLE);
             }
         }
